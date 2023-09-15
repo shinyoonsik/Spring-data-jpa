@@ -1,6 +1,7 @@
-package com.study.datajpa.repository;
+package com.study.datajpa.repository.jpa;
 
 import com.study.datajpa.entity.Member;
+import com.study.datajpa.repository.datajpa.MemberRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

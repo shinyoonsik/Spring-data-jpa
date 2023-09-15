@@ -1,4 +1,4 @@
-package com.study.datajpa.repository;
+package com.study.datajpa.repository.datajpa;
 
 import com.study.datajpa.entity.Member;
 import org.springframework.data.jpa.repository.JpaRepository;
