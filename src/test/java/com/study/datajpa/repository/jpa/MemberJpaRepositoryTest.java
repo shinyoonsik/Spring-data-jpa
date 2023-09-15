@@ -34,7 +34,7 @@ class MemberJpaRepositoryTest {
     }
 
     @Test
-    @DisplayName("MemberJPA basicCRUD테스트")
+    @DisplayName("Member basicCRUD테스트 on jpa")
     public void basicCRUD(){
         Member member1 = new Member("member1");
         Member member2 = new Member("member2");
