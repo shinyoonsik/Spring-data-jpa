@@ -79,4 +79,25 @@ class MemberJpaRepositoryTest {
         Member result = memberJpaRepository.find(member.getId());
         assertThat(result.getAge()).isEqualTo(updatedAge);
     }
+
+    @Test
+    @DisplayName("findByUsernameAndAgeGreaterThan() 테스트")
+    void 테스트_findByUsernameAndAgeGreaterThan(){
+        // given
+        int age = 91;
+        int age2 = 92;
+        String username = "ys";
+        Member member1 = new Member(username, age);
+        Member member2 = new Member(username, age2);
+        memberJpaRepository.save(member1);
+        memberJpaRepository.save(member2);
+
+        // when
+        // JPQL쿼리를 실행하기전에 flush가 호출됨
+        List<Member> results = memberJpaRepository.findByUsernameAndAgeGreaterThan(username, 90);
+
+        // then
+        assertThat(results.size()).isEqualTo(2);
+        assertThat(results.get(0).getUsername()).isEqualTo(username);
+    }
 }

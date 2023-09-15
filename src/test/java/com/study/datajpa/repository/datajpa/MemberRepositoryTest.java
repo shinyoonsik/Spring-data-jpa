@@ -64,10 +64,43 @@ class MemberRepositoryTest {
         assertThat(count).isEqualTo(2);
 
         // 삭제 검증
-        memberRepository.delete(member1 );
+        memberRepository.delete(member1);
         memberRepository.delete(member2);
         long deletedCount = memberRepository.count();
         assertThat(deletedCount).isEqualTo(0);
     }
 
-}
+    @Test
+    @DisplayName("findByUsernameAndAgeGreaterThan() 테스트")
+    void 테스트_findByUsernameAndAgeGreaterThan(){
+        // given
+        int age = 101;
+        int age2 = 102;
+        String username = "ys";
+        Member member1 = new Member(username, age);
+        Member member2 = new Member(username, age2);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        // when
+        List<Member> results = memberRepository.findByUsernameAndAgeGreaterThan(username, 100);
+
+        // then
+        assertThat(results.size()).isEqualTo(2);
+        assertThat(results.get(0).getUsername()).isEqualTo(username);
+    }
+
+    @Test
+    @DisplayName("findMemberBy 테스트")
+    void 테스트_쿼리메소드(){
+        // given
+        Member member = new Member("testyy");
+        memberRepository.save(member);
+
+        // when
+        List<Member> results = memberRepository.findMemberBy();
+
+        // then
+        assertThat(results.size()).isGreaterThan(0);
+    }
+ }
