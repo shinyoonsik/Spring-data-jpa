@@ -9,7 +9,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -180,4 +183,58 @@ class MemberRepositoryTest {
         // then
         assertThat(results.size()).isEqualTo(2);
     }
- }
+
+    @Test
+    @DisplayName("JPA 반환 타입 테스트 - 컬렉션 리턴")
+    void 테스트_findMembersByUsername(){
+        // when
+        List<Member> results = memberRepository.findMemberListByUsername("AAA");
+
+        // then
+        assertThat(results).isNotNull();
+        assertThat(results.size()).isEqualTo(0);
+    }
+
+    @Test
+    @DisplayName("JPA 반환 타입 테스트 - 단건 리턴")
+    void 테스트_findMemberByUsername(){
+        // when
+        Member result = memberRepository.findMemberByUsername("AAA");
+
+        // then
+        assertThat(result).isNull();
+    }
+
+    @Test
+    @DisplayName("JPA 반환 타입 테스트 - optional 리턴")
+    void 테스트_findByUsername(){
+        // when
+        Member member = memberRepository.findByUsername("AAA").orElse(new Member("default"));
+        assertThat(member.getUsername()).isEqualTo("default");
+
+        try{
+            Member member1 = memberRepository.findByUsername("AAA").orElseThrow(() -> new NoSuchElementException("No value"));
+        } catch (NoSuchElementException e){
+            assertThat(e.getMessage()).isEqualTo("No value");
+        }
+    }
+
+    @Test
+    void optional_test(){
+        // orElse() 예시: 무조건 "default value" 표현식이 실행됨
+        String result1 = Optional.of("hello1")
+                .orElse(expensiveMethod("type1")); // expensiveMethod()가 실행됨
+        System.out.println(result1);
+
+        // orElseGet() 예시: Optional이 값이 있으므로 expensiveMethod()는 실행되지 않음
+        String result2 = Optional.of("hello2")
+                .orElseGet(() -> expensiveMethod("type2")); // expensiveMethod()가 실행되지 않음
+        System.out.println(result2);
+    }
+
+    private String expensiveMethod(String type) {
+        System.out.println("타입: " + type);
+        Arrays.asList(1,2,3,4,5).forEach(System.out::println);
+        return "type";
+    }
+}
