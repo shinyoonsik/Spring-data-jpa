@@ -1,11 +1,12 @@
 package com.study.datajpa.repository.datajpa;
 
+import com.study.datajpa.dto.PMemberDTO;
 import com.study.datajpa.entity.Member;
+import com.study.datajpa.entity.Team;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
@@ -15,10 +16,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@Rollback(value = false)
+//@Rollback(value = false)
 class MemberRepositoryTest {
+
     @Autowired
     MemberRepository memberRepository;
+
+    @Autowired
+    TeamRepository teamRepository;
 
     @Test
     @DisplayName("MemberRepository의 구현체 테스트")
@@ -102,5 +107,77 @@ class MemberRepositoryTest {
 
         // then
         assertThat(results.size()).isGreaterThan(0);
+    }
+
+    @Test
+    @DisplayName("@Query테스트, 메소드: findUser()")
+    void 테스트_findUser메소드(){
+        // given
+        int age = 120;
+        String name = "yss";
+        Member member = new Member(name, age);
+        memberRepository.save(member);
+
+        // when
+        List<Member> user = memberRepository.findUser(name, age);
+
+        // then
+        assertThat(user.size()).isEqualTo(1);
+        assertThat(user.get(0).getUsername()).isEqualTo(name);
+    }
+
+    @Test
+    @DisplayName("@Query테스트, 메소드: findUsernames()")
+    void 테스트_findUsernames(){
+        // given
+        int age = 120;
+        String name = "yss1234";
+        Member member = new Member(name, age);
+        memberRepository.save(member);
+
+        // when
+        List<String> usernames = memberRepository.findUsernames();
+
+        // then
+        assertThat(usernames.size()).isGreaterThanOrEqualTo(1);
+        for(String s : usernames){
+            System.out.println(s);
+        }
+    }
+
+    @Test
+    @DisplayName("@Query테스트, 메소드: findUsernames()")
+    void 테스트_findMemberDTO(){
+        // given
+        Team team = new Team("LiverPool");
+        teamRepository.save(team);
+
+        Member member = new Member("yss1234", 123);
+        member.changeTeam(team);
+        memberRepository.save(member);
+
+        // when
+        List<PMemberDTO> results = memberRepository.findMemberDTO();
+
+        // then
+        for (PMemberDTO pMemberDTO : results){
+            System.out.println(pMemberDTO);
+        }
+    }
+
+    @Test
+    @DisplayName("@Query테스트, 메소드: findByNames()")
+    void 테스트_findByNames(){
+        // given
+        Member member1 = new Member("AAA", 1);
+        Member member2 = new Member("BBB", 2);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        // when
+        List<Member> results = memberRepository.findByNames(List.of("AAA", "BBB"));
+
+        // then
+        assertThat(results.size()).isEqualTo(2);
     }
  }
