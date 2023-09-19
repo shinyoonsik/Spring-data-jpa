@@ -13,10 +13,6 @@ public class MemberJpaRepository {
     @PersistenceContext
     private EntityManager em;
 
-    /**
-     * Member update()가 없는 이유: JPA는 변경감지기능을 통해 엔티티의 update쿼리를 만들어 flush한다
-     */
-
     public EntityManager getEm(){
         return this.em;
     }
@@ -52,5 +48,20 @@ public class MemberJpaRepository {
                 .setParameter("username", username)
                 .setParameter("age", age)
                 .getResultList();
+    }
+
+    public List<Member> findByPage(int age, int offset, int limit){
+        return em.createQuery("select m from Member m where m.age = :age order by m.username desc")
+                .setParameter("age", age)
+                .setFirstResult(offset) // 몇 번쨰부터
+                .setMaxResults(limit) // 몇개 가져와
+                .getResultList();
+    }
+
+    public long totalCount(int age){
+        // 전체 개수만 필요한 상황이니 성능을 위해 정렬조건은 제외시킴
+        return em.createQuery("select count(m) from Member m where m.age = :age", Long.class)
+                .setParameter("age", age)
+                .getSingleResult();
     }
 }
