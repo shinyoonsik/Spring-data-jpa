@@ -2,6 +2,9 @@ package com.study.datajpa.repository.datajpa;
 
 import com.study.datajpa.dto.PMemberDTO;
 import com.study.datajpa.entity.Member;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Slice;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,7 +25,7 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Query("select m from Member m where m.username = :username and m.age = :age") // 엔티티 조회
     List<Member> findUser(@Param("username") String username, @Param("age") int age);
 
-    @Query("select m.username from Member m")
+    @Query("select m.username from Member m join m.team t")
     List<String> findUsernames();
 
     @Query("select new com.study.datajpa.dto.PMemberDTO(m.id, m.username, t.name) from Member m join m.team t")
@@ -34,6 +37,30 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findMemberListByUsername(String name); // return: 컬렉션
     Member findMemberByUsername(String name); // return: 단건
     Optional<Member> findByUsername(String name); // return: 단건
+
+    /**
+     * 리턴 타입이 Page이면 Page계산에 totalCount가 필요하므로 totalCount쿼리를 JPA가 날려줌
+     * 따라서, totalCount쿼리를 다시 작성할 필요 없다
+     */
+    Page<Member> findPageByAge(int age, Pageable pageable);
+
+    /**
+     * Slice는 totalCount쿼리를 보내지 않음
+     * Slice는 3개 요청하면 4(3 + 1)개를 쿼리해서 response해준다
+     * 활용: (모바일)클라이언트에서 3개만 보여주고 한 개가 있다면 "더 보기"버튼을 통해 스크롤 방식으로 다음 10개을 또 제공한다
+     */
+    Slice<Member> findSliceByAge(int age, Pageable pageable);
+
+    /**
+     * 데이터가 많아지면 totalCount하는데 오래걸리므로 성능이슈가 발생할 수 있다.
+     * 이를 대비해서 totalCount쿼리를 따로 작성한다
+     * 예를 들어, totalCount쿼리는 정렬도 필요없으며 만약 left outer join이라면 기준이 되는 테이블의 개수만 파악해서
+     * 리턴해주면 된다.
+     */
+    @Query(value = "select m from Member m left join m.team t",
+            countQuery = "select count(m.username) from Member m")
+    Page<Member> findMemberAllBy(Pageable pageable);
+
 
 }
 

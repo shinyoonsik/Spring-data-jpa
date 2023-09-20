@@ -7,19 +7,22 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Slice;
+import org.springframework.data.domain.Sort;
+import org.springframework.test.annotation.Rollback;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.NoSuchElementException;
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 
 @SpringBootTest
 @Transactional
-//@Rollback(value = false)
+@Rollback(value = false)
 class MemberRepositoryTest {
 
     @Autowired
@@ -220,21 +223,88 @@ class MemberRepositoryTest {
     }
 
     @Test
-    void optional_test(){
-        // orElse() 예시: 무조건 "default value" 표현식이 실행됨
-        String result1 = Optional.of("hello1")
-                .orElse(expensiveMethod("type1")); // expensiveMethod()가 실행됨
-        System.out.println(result1);
+    @DisplayName("Spring Data JPA 페이징 테스트-Page")
+    void 테스트_Spring_Data_JPA_페이징_Page(){
+        // given
+        int age = 10;
+        int offset = 0;
+        int limit = 3;
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
 
-        // orElseGet() 예시: Optional이 값이 있으므로 expensiveMethod()는 실행되지 않음
-        String result2 = Optional.of("hello2")
-                .orElseGet(() -> expensiveMethod("type2")); // expensiveMethod()가 실행되지 않음
-        System.out.println(result2);
+        // sorting이 필요없는 경우 or sorting조건이 복잡해서 JPQL로 따로 빼는 경우
+        // PageRequest pageRequest = PageRequest.of(0, 3);
+        PageRequest pageRequest = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "username"));
+
+        // when
+        Page<Member> page = memberRepository.findPageByAge(age, pageRequest);
+
+        // then
+        assertThat(page.getContent().size()).isEqualTo(3);
+        assertThat(page.getTotalElements()).isEqualTo(5);
+        assertThat(page.getTotalPages()).isEqualTo(2);
+        assertThat(page.getNumber()).isEqualTo(0); // 현재 페이지 번호. (몇 번째 page인지)
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.hasNext()).isTrue();
     }
 
-    private String expensiveMethod(String type) {
-        System.out.println("타입: " + type);
-        Arrays.asList(1,2,3,4,5).forEach(System.out::println);
-        return "type";
+    @Test
+    @DisplayName("Spring Data JPA 페이징 테스트-Slice")
+    void 테스트_Spring_Data_JPA_페이징_Slice(){
+        // given
+        int age = 10;
+        int offset = 0;
+        int limit = 3; // size를 의미함
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        PageRequest pageRequest = PageRequest.of(0, 3);
+
+        // when
+        Slice<Member> slice = memberRepository.findSliceByAge(age, pageRequest);
+
+        // then
+        assertThat(slice.getContent().size()).isEqualTo(3);
+        assertThat(slice.getNumber()).isEqualTo(0);
+        assertThat(slice.isFirst()).isTrue();
+        assertThat(slice.hasNext()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Spring Data JPA 페이징 테스트-Page최적화")
+    void 테스트_Spring_Data_JPA_페이징_Page_최적화(){
+        // given
+        int age = 10;
+        int offset = 0;
+        int limit = 3;
+        Team team = new Team("teamA");
+        teamRepository.save(team);
+
+        memberRepository.save(new Member("member1", 10, team));
+        memberRepository.save(new Member("member2", 10, team));
+        memberRepository.save(new Member("member3", 10, team));
+        memberRepository.save(new Member("member4", 10, team));
+        memberRepository.save(new Member("member5", 10, team));
+
+        // sorting이 필요없는 경우 or sorting조건이 복잡해서 JPQL로 따로 빼는 경우
+        // PageRequest pageRequest = PageRequest.of(0, 3);
+        PageRequest pageRequest = PageRequest.of(0, 3);
+
+        // when
+        Page<Member> page = memberRepository.findMemberAllBy(pageRequest);
+
+        // then
+        assertThat(page.getContent().size()).isEqualTo(3);
+        assertThat(page.getTotalElements()).isEqualTo(5);
+        assertThat(page.getTotalPages()).isEqualTo(2);
+        assertThat(page.getNumber()).isEqualTo(0); // 현재 페이지 번호. (몇 번째 page인지)
+        assertThat(page.isFirst()).isTrue();
+        assertThat(page.hasNext()).isTrue();
     }
 }
