@@ -3,6 +3,7 @@ package com.study.datajpa.repository.datajpa;
 import com.study.datajpa.dto.PMemberDTO;
 import com.study.datajpa.entity.Member;
 import com.study.datajpa.entity.Team;
+import jakarta.persistence.EntityManager;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -30,6 +32,9 @@ class MemberRepositoryTest {
 
     @Autowired
     TeamRepository teamRepository;
+
+    @Autowired
+    EntityManager em; // 같은 트랜잭션이면 같은 em을 주입받는다. 따라서 멀티스레드 환경이어도 걱정할 필요 없음
 
     @Test
     @DisplayName("MemberRepository의 구현체 테스트")
@@ -306,5 +311,47 @@ class MemberRepositoryTest {
         assertThat(page.getNumber()).isEqualTo(0); // 현재 페이지 번호. (몇 번째 page인지)
         assertThat(page.isFirst()).isTrue();
         assertThat(page.hasNext()).isTrue();
+    }
+
+    @Test
+    @DisplayName("Spring Data JPA 벌크연산 테스트")
+    void 테스트_bulk_update(){
+        // given
+        int age = 10;
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        // when
+        int resultCount = memberRepository.updateAgeInBulk(age);
+
+        // then
+        assertThat(resultCount).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("Spring Data JPA 벌크연산 주의사항 테스트")
+    void 테스트_bulk_update_modify(){
+        // given
+        int age = 10;
+        memberRepository.save(new Member("member1", 10));
+        memberRepository.save(new Member("member2", 10));
+        memberRepository.save(new Member("member3", 10));
+        memberRepository.save(new Member("member4", 10));
+        memberRepository.save(new Member("member5", 10));
+
+        // when
+        int resultCount = memberRepository.updateAgeInBulk(age);
+        // em초기화를 해야 DB에 벌크연산의 결과가 반영된 DB에서 데이터를 가져옴
+//        em.flush();
+//        em.clear();
+
+        Optional<Member> member = memberRepository.findByUsername("member1");
+        member.ifPresent(System.out::println);
+
+        // then
+        assertThat(resultCount).isEqualTo(5);
     }
 }

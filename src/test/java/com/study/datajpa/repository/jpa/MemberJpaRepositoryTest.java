@@ -1,7 +1,6 @@
 package com.study.datajpa.repository.jpa;
 
 import com.study.datajpa.entity.Member;
-import com.study.datajpa.repository.jpa.MemberJpaRepository;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -116,10 +115,28 @@ class MemberJpaRepositoryTest {
 
         // when
         List<Member> members = memberJpaRepository.findByPage(age, offset, limit);
-        long totalCount = memberJpaRepository.totalCount(age);
+        long totalCount = memberJpaRepository.getTotalCount(age);
 
         // then
         assertThat(members.size()).isEqualTo(3);
         assertThat(totalCount).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("벌크 업데이트")
+    void 테스트_bulk_update(){
+        // given
+        int age = 10;
+        memberJpaRepository.save(new Member("member1", age));
+        memberJpaRepository.save(new Member("member2", age));
+        memberJpaRepository.save(new Member("member3", age));
+        memberJpaRepository.save(new Member("member4", age));
+        memberJpaRepository.save(new Member("member5", age));
+
+        // when
+        int resultCount = memberJpaRepository.updateAgeInBulk(age);
+
+        // then
+        assertThat(resultCount).isEqualTo(5);
     }
 }

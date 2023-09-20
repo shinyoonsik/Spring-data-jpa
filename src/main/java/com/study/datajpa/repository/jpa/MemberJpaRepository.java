@@ -58,10 +58,16 @@ public class MemberJpaRepository {
                 .getResultList();
     }
 
-    public long totalCount(int age){
+    public long getTotalCount(int age){
         // 전체 개수만 필요한 상황이니 성능을 위해 정렬조건은 제외시킴
         return em.createQuery("select count(m) from Member m where m.age = :age", Long.class)
                 .setParameter("age", age)
                 .getSingleResult();
+    }
+
+    public int updateAgeInBulk(int age){
+        return em.createQuery("update Member m set m.age = m.age + 1 where m.age >= :age")
+                .setParameter("age", age)
+                .executeUpdate();
     }
 }
