@@ -334,6 +334,7 @@ class MemberRepositoryTest {
     @Test
     @DisplayName("Spring Data JPA 벌크연산 주의사항 테스트")
     void 테스트_bulk_update_modify(){
+        System.out.println("entityManager: " + em);
         // given
         int age = 10;
         memberRepository.save(new Member("member1", 10));
@@ -344,14 +345,44 @@ class MemberRepositoryTest {
 
         // when
         int resultCount = memberRepository.updateAgeInBulk(age);
-        // em초기화를 해야 DB에 벌크연산의 결과가 반영된 DB에서 데이터를 가져옴
-//        em.flush();
-//        em.clear();
 
         Optional<Member> member = memberRepository.findByUsername("member1");
         member.ifPresent(System.out::println);
 
         // then
         assertThat(resultCount).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("N + 1문제 구현")
+    void 테스트_엔플러스1_문제(){
+        Team teamA = new Team("TeamA");
+        Team teamB = new Team("TeamB");
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1");
+        Member member2 = new Member("member2");
+        member1.setTeam(teamA);
+        member2.setTeam(teamB);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+
+        // N + 1 문제 발생
+        // memberRepository.findAll()을 통해 1번 조회했으나, for문에서 N개의 쿼리가 나감
+        List<Member> members = memberRepository.findAll();
+        for(Member member : members){
+            System.out.println(member.getUsername());
+
+            // Member가 lazy loading이므로 proxy객체를 가져옴
+            System.out.println("team: " + member.getTeam().getClass());
+
+            // 실제로 team의 속성정보를 사용할 때, 쿼리를 날림
+            System.out.println("team의 name" + member.getTeam().getName());
+        }
+
     }
 }
