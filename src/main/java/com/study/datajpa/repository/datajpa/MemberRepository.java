@@ -5,6 +5,7 @@ import com.study.datajpa.entity.Member;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -18,7 +19,6 @@ import java.util.Optional;
 public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
 
-    List<Member> findMemberBy(); // 전체 검색
 
     /**
      * @Query는 Spring Data JPA에서 사용되며, JPQL 문자열을 입력으로 받아 애플리케이션 초기화 시점에 파싱하고,
@@ -66,6 +66,14 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     @Modifying(clearAutomatically = true) // em.clear()를 따로 해주지 않아도 된다
     @Query("update Member m set m.age = m.age + 1 where m.age >= :age")
     int updateAgeInBulk(@Param("age") int age);
+
+    @Query("select m from Member m join fetch m.team")
+    List<Member> findMemberFetchJoin();
+
+    // fetch join(== left outer join)을 지원하는 Spring Data jpa기능. (fetch join의 간편버전)
+    @EntityGraph(attributePaths = {"team"})
+    List<Member> findMemberBy();
+
 
 }
 

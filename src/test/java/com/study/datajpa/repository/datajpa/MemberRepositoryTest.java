@@ -107,20 +107,6 @@ class MemberRepositoryTest {
     }
 
     @Test
-    @DisplayName("findMemberBy 테스트")
-    void 테스트_쿼리메소드(){
-        // given
-        Member member = new Member("testyy");
-        memberRepository.save(member);
-
-        // when
-        List<Member> results = memberRepository.findMemberBy();
-
-        // then
-        assertThat(results.size()).isGreaterThan(0);
-    }
-
-    @Test
     @DisplayName("@Query테스트, 메소드: findUser()")
     void 테스트_findUser메소드(){
         // given
@@ -383,6 +369,56 @@ class MemberRepositoryTest {
             // 실제로 team의 속성정보를 사용할 때, 쿼리를 날림
             System.out.println("team의 name" + member.getTeam().getName());
         }
+    }
 
+    @Test
+    @DisplayName("N + 1문제 해결 방법 테스트: fetch join")
+    void 테스트_fetch_join(){
+        Team teamA = new Team("TeamA");
+        Team teamB = new Team("TeamB");
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1");
+        Member member2 = new Member("member2");
+        member1.setTeam(teamA);
+        member2.setTeam(teamB);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+
+        // member를 조회할 때, team도 한 번에 다 가져온다
+        List<Member> members = memberRepository.findMemberFetchJoin();
+        for(Member member : members){
+            System.out.println("team객체: " + member.getTeam().getClass()); // proxy가 아님
+            System.out.println("member의 team's name: " + member.getTeam().getName());
+        }
+    }
+
+    @Test
+    @DisplayName("N + 1문제 해결 방법 테스트: EntityGraph")
+    void 테스트_EntityGraph(){
+        Team teamA = new Team("TeamA");
+        Team teamB = new Team("TeamB");
+        teamRepository.save(teamA);
+        teamRepository.save(teamB);
+
+        Member member1 = new Member("member1");
+        Member member2 = new Member("member2");
+        member1.setTeam(teamA);
+        member2.setTeam(teamB);
+        memberRepository.save(member1);
+        memberRepository.save(member2);
+
+        em.flush();
+        em.clear();
+
+        // member를 조회할 때, team도 한 번에 다 가져온다
+        List<Member> members = memberRepository.findMemberBy();
+        for(Member member : members){
+            System.out.println("member의 team's name: " + member.getTeam().getName());
+        }
     }
 }
