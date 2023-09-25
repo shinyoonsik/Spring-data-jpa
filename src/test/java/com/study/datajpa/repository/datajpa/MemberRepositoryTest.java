@@ -438,7 +438,16 @@ class MemberRepositoryTest {
 
         Member member1 = memberRepository.findByUsername("member1").get();
         member1.setUsername("member2"); // update쿼리가 발생
+    }
 
+    @Test
+    @DisplayName("사용자 정의 리파지토리: MemberRepositoryCustom테스트")
+    void 테스트_MemberRepositoryCustom(){
+        memberRepository.save(new Member("heloo"));
+
+        List<Member> memberCustom = memberRepository.findCustomMember();
+
+        assertThat(memberCustom.size() > 0).isTrue();
     }
 
 }

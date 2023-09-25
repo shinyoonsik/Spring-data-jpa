@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Optional;
 
 
-public interface MemberRepository extends JpaRepository<Member, Long> {
+public interface MemberRepository extends JpaRepository<Member, Long>, MemberRepositoryCustom {
     List<Member> findByUsernameAndAgeGreaterThan(String username, int age);
 
 
@@ -88,8 +88,5 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // JPA구현체에게 알리는 힌트.
     @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
     Member findReadOnlyByUsername(String username);
-
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
-    List<Member> findByUsernameAnAndAge(String name);
 }
 
