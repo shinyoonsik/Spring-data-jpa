@@ -421,4 +421,24 @@ class MemberRepositoryTest {
             System.out.println("member의 team's name: " + member.getTeam().getName());
         }
     }
+
+    @Test
+    @DisplayName("JPA Hint테스트")
+    void 테스트_JPA_hint(){
+        // given
+        memberRepository.save(new Member("member1"));
+        em.flush();
+        em.clear();
+
+        // when
+        Member foundMember = memberRepository.findReadOnlyByUsername("member1");
+        foundMember.setUsername("change username");
+        em.flush(); // update 쿼리가 나가지 않음.
+        em.clear();
+
+        Member member1 = memberRepository.findByUsername("member1").get();
+        member1.setUsername("member2"); // update쿼리가 발생
+
+    }
+
 }

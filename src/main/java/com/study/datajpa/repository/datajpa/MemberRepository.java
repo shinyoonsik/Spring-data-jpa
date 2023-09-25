@@ -2,13 +2,11 @@ package com.study.datajpa.repository.datajpa;
 
 import com.study.datajpa.dto.PMemberDTO;
 import com.study.datajpa.entity.Member;
+import jakarta.persistence.QueryHint;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Slice;
-import org.springframework.data.jpa.repository.EntityGraph;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Modifying;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Collection;
@@ -24,7 +22,8 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
      * @Query는 Spring Data JPA에서 사용되며, JPQL 문자열을 입력으로 받아 애플리케이션 초기화 시점에 파싱하고,
      * 실행 시점에 JPA 구현체가 이를 SQL로 변환하여 실행합니다. JPQL관련 문법 오류는 파싱하는 시점인 초기화 시점(애플리케이션이 처음 로딩되어 시작되는 시점)에 발생하면 알려줍니다.
      */
-    @Query("select m from Member m where m.username = :username and m.age = :age") // 엔티티 조회
+    @Query("select m from Member m where m.username = :username and m.age = :age")
+    // 엔티티 조회
     List<Member> findUser(@Param("username") String username, @Param("age") int age);
 
     @Query("select m.username from Member m join m.team t")
@@ -37,7 +36,9 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     List<Member> findByNames(@Param("names") Collection<String> names);
 
     List<Member> findMemberListByUsername(String name); // return: 컬렉션
+
     Member findMemberByUsername(String name); // return: 단건
+
     Optional<Member> findByUsername(String name); // return: 단건
 
     /**
@@ -73,6 +74,19 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
     // fetch join(== left outer join)을 지원하는 Spring Data jpa기능. (fetch join의 간편버전)
     @EntityGraph(attributePaths = {"team"})
     List<Member> findMemberBy();
+
+    /**
+     * 완벽히 조회용으로만 사용할 거라면 아래의 hint를 통해 최적화 가능!
+     * Hint가 없었다면, 조회해온 데이터를 영속성 컨텍스트에 넣고 snapshot과 비교해서 dirty checking이 작동하는데
+     * 내부적으로 최적화가 되어있더라도 이 모든 것이 추가 비용이다. 따라서 조회용으로만 사용할 시 아래처럼 성능최적화를 할 수 있다.
+     *
+     * 동작 방식: findReadOnlyByUsername()를 사용하면 내부적으로 member를 조회용으로만 사용하는구나라고 여기고
+     * snapshot을 만들지 않는다. 즉 findReadOnlyByUsername()조회해온 member가 영속성 컨텍스트에 존재하는 한
+     * 해당 entity를 변경해도 dirty checking이 동작하지 않는다!
+     */
+    // JPA구현체에게 알리는 힌트.
+    @QueryHints(value = @QueryHint(name = "org.hibernate.readOnly", value = "true"))
+    Member findReadOnlyByUsername(String username);
 
 
 }
