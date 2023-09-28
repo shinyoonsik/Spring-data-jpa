@@ -68,6 +68,7 @@ class MemberTest {
         // then
         assertThat(foundMember.getUsername()).isEqualTo("memberA");
         assertThat(foundMember.getCreatedDate()).isNotEqualTo(foundMember.getUpdatedDate());
-
+        System.out.println(foundMember.getCreatedBy());
+        System.out.println(foundMember.getUpdateBy());
     }
 }

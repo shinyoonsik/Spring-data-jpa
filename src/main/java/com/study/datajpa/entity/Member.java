@@ -9,7 +9,7 @@ import lombok.*;
 @Table(name = "member")
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @ToString(of = {"id", "username", "age"}) // 연관관계 필드는 ToString하면 안됨 => 무한루프 발생
-public class Member extends JpaBaseEntity{
+public class Member extends BaseEntity{
     @Id
     @GeneratedValue
     @Column(name = "member_id") // 관례상 많이 사용하는 방식. DB입장에서는 Member.id가 불가하므로
