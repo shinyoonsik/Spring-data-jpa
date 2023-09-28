@@ -14,7 +14,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @Transactional
-@Rollback(value = false)
+@Rollback(value = false) // DB에 결과를 확인하고 싶다면 추가. @Transactional은 default로 Rollback=true
 class MemberTest {
 
     @PersistenceContext
@@ -46,5 +46,28 @@ class MemberTest {
         for(Member member : selectedMember){
             System.out.println(member);
         }
+    }
+
+    @Test
+    @DisplayName("JpaBaseEntity 테스트")
+    void 테스트_JpaBaseEntity() throws InterruptedException {
+        // given
+        Member member = new Member("memberA");
+        em.persist(member);
+        em.flush();
+
+        Thread.sleep(2000);
+        member.setAge(10000);
+
+        em.flush();
+        em.clear();
+
+        // when
+        Member foundMember = em.find(Member.class, member.getId());
+
+        // then
+        assertThat(foundMember.getUsername()).isEqualTo("memberA");
+        assertThat(foundMember.getCreatedDate()).isNotEqualTo(foundMember.getUpdatedDate());
+
     }
 }

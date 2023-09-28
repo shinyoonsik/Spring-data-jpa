@@ -26,7 +26,7 @@ public class MemberRepositoryCustomImpl implements MemberRepositoryCustom {
      * - or 사용자 정의 인터페이스명(MemberRepositoryCustom) + Impl
      */
 
-    private final EntityManager em; // 생성자가 하나만 있으면 Spring이 알아서 injection을 해줌
+    private final EntityManager em; // 생성자가 하나만 있으면 Spring이 그 생성자를 사용하여 의존성을 자동으로 주입한다.
 
     @Override
     public List<Member> findCustomMember() {
